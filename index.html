@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox AI Copilot - Free Assistant</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Highlight.js (Tokyo Night Dark Style) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js"></script>
+    
+    <!-- Marked (Markdown Parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="app-container">
+        <!-- Sidebar / Header Status -->
+        <header class="main-header">
+            <div class="logo-area">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">
+                    <h1>ROBLOX <span>CO-PILOT</span></h1>
+                    <p>Free AI Scripting Assistant</p>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-indicator" id="server-status">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-label">Local Server: <span class="val">Checking...</span></span>
+                </div>
+                <div class="status-indicator" id="studio-status">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-label">Studio Connection: <span class="val">Offline</span></span>
+                </div>
+            </div>
+
+            <button class="settings-btn" id="open-settings-btn" title="Open Settings">
+                <i data-lucide="settings"></i>
+            </button>
+        </header>
+
+        <main class="workspace-layout">
+            <!-- Left Panel: Chat Interface -->
+            <section class="panel chat-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i data-lucide="message-square"></i>
+                        <span>AI Assistant Chat</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="icon-btn" id="clear-chat-btn" title="Clear Chat">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages-container">
+                    <div class="message system-message">
+                        <div class="message-content">
+                            <p><strong>Welcome to Roblox AI Copilot!</strong> 🚀</p>
+                            <p>I can write Roblox Luau scripts, optimize code, debug issues, and explain game logic. Make sure to:</p>
+                            <ul>
+                                <li>Configure your free <strong>Gemini API Key</strong> in the settings (top-right).</li>
+                                <li>Run the local server script (`server.py`) on your PC.</li>
+                                <li>Install and run the plugin inside Roblox Studio.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Script Context Area -->
+                <div class="context-banner hidden" id="active-context-banner">
+                    <div class="context-details">
+                        <i data-lucide="file-code" class="context-icon"></i>
+                        <div class="context-text">
+                            <div class="context-title">Editing in Studio:</div>
+                            <div class="context-path" id="active-context-path">Workspace.Script</div>
+                        </div>
+                    </div>
+                    <button class="close-context-btn" id="ignore-context-btn" title="Ignore context">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea id="prompt-input" placeholder="Explain what script you want to make... (e.g. 'A script that spins a part when touched')"></textarea>
+                    <div class="chat-controls">
+                        <div class="model-select-wrapper">
+                            <label for="model-select"><i data-lucide="brain"></i></label>
+                            <select id="model-select">
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoning)</option>
+                            </select>
+                        </div>
+                        <button class="send-btn" id="send-prompt-btn">
+                            <span>Generate</span>
+                            <i data-lucide="sparkles"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Code Viewer -->
+            <section class="panel code-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i data-lucide="code-2"></i>
+                        <span id="editor-title">Generated Lua Code</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="action-btn secondary-btn" id="copy-code-btn">
+                            <i data-lucide="copy"></i>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="code-viewer-container">
+                    <pre><code class="language-lua" id="code-output">-- Write a prompt on the left to generate Roblox Luau scripts.
+-- When generated, click 'Sync to Studio' below to push it to Roblox Studio automatically!
+
+local function greet()
+    print("Hello from Roblox AI Copilot!")
+end
+
+greet()</code></pre>
+                </div>
+
+                <div class="code-actions-footer">
+                    <button class="sync-btn" id="sync-code-btn" disabled>
+                        <i data-lucide="refresh-cw" class="spinner-icon hidden"></i>
+                        <i data-lucide="cloud-lightning" class="sync-icon"></i>
+                        <span>Sync to Roblox Studio</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Settings Overlay Modal -->
+    <div class="modal-overlay hidden" id="settings-modal">
+        <div class="modal-box glassmorphism">
+            <div class="modal-header">
+                <h2>Copilot Settings</h2>
+                <button class="close-modal-btn" id="close-settings-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-key-input">Gemini API Key</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="api-key-input" placeholder="AIzaSy...">
+                        <button class="toggle-password-btn" id="toggle-api-key" type="button">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                    <p class="help-text">
+                        Don't have a key? Get one for free at the 
+                        <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio <i data-lucide="external-link" class="inline-icon"></i></a>.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="server-url-input">Local Broker Server URL</label>
+                    <input type="text" id="server-url-input" placeholder="http://localhost:24848" value="http://localhost:24848">
+                    <p class="help-text">The address of your local Python broker running on your computer.</p>
+                </div>
+
+                <div class="settings-instructions">
+                    <h3>Setup Checklist</h3>
+                    <ol>
+                        <li>Start the python server: run <code>python server.py</code> in the terminal.</li>
+                        <li>Open Roblox Studio, click <strong>Plugin Folder</strong> under Plugins, and save <code>plugin.lua</code> there.</li>
+                        <li>Verify connection statuses are green and enjoy!</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" id="cancel-settings-btn">Cancel</button>
+                <button class="btn primary-btn" id="save-settings-btn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
